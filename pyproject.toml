@@ -1,0 +1,75 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fuel_blending"
+version = "1.3.2"
+description = "Pacchetto per l'ottimizzazione della miscelazione di carburanti"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "Proprietario"}
+authors = [
+    {name = "Fuel Blending Team"}
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy>=1.20.0",
+    "pandas>=1.3.0",
+    "scipy>=1.7.0",
+    "numba>=0.55.0",
+    "matplotlib>=3.8.0",
+    "seaborn>=0.13.0",
+    "tqdm>=4.66.0",
+    "openpyxl>=3.1.0",
+]
+
+[project.optional-dependencies]
+google_drive = [
+    "google-api-python-client>=2.130.0",
+    "google-auth-httplib2>=0.1.0",
+    "google-auth-oauthlib>=0.8.0",
+]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "ruff>=0.0.270",
+    "mypy>=1.0.0",
+]
+
+[project.scripts]
+fuel-blending = "fuel_blending.cli:main"
+
+[tool.setuptools]
+packages = ["fuel_blending"]
+
+[tool.setuptools.package-data]
+fuel_blending = ["py.typed"]
+
+[tool.black]
+line-length = 88
+target-version = ["py38", "py39", "py310"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py38"
+select = ["E", "F", "I"]
+ignore = []
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+
+[[tool.mypy.overrides]]
+module = ["numpy.*", "pandas.*", "scipy.*", "matplotlib.*", "seaborn.*", "google.*"]
+ignore_missing_imports = true
