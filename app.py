@@ -427,116 +427,116 @@ def api_optimize():
     """API endpoint for optimization"""
     try:
         # Create a temporary directory for this request
-        temp_dir = tempfile.mkdtemp(prefix='fuel_blending_api_')
-        files_dir = os.path.join(temp_dir, 'files')
-        os.makedirs(files_dir, exist_ok=True)
-        output_dir = os.path.join(temp_dir, 'output')
-        os.makedirs(output_dir, exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix='fuel_blending_api_') as temp_dir:
+            files_dir = os.path.join(temp_dir, 'files')
+            os.makedirs(files_dir, exist_ok=True)
+            output_dir = os.path.join(temp_dir, 'output')
+            os.makedirs(output_dir, exist_ok=True)
         
-        # Process uploaded files
-        components_path = None
-        grades_path = None
-        additives_path = None
+            # Process uploaded files
+            components_path = None
+            grades_path = None
+            additives_path = None
         
-        # Get file data from request
-        if 'components_file' in request.files:
-            components_file = request.files['components_file']
-            if components_file.filename != '':
-                components_path = os.path.join(files_dir, secure_filename(components_file.filename))
-                components_file.save(components_path)
+            # Get file data from request
+            if 'components_file' in request.files:
+                components_file = request.files['components_file']
+                if components_file.filename != '':
+                    components_path = os.path.join(files_dir, secure_filename(components_file.filename))
+                    components_file.save(components_path)
         
-        if 'grades_file' in request.files:
-            grades_file = request.files['grades_file']
-            if grades_file.filename != '':
-                grades_path = os.path.join(files_dir, secure_filename(grades_file.filename))
-                grades_file.save(grades_path)
+            if 'grades_file' in request.files:
+                grades_file = request.files['grades_file']
+                if grades_file.filename != '':
+                    grades_path = os.path.join(files_dir, secure_filename(grades_file.filename))
+                    grades_file.save(grades_path)
         
-        if 'additives_file' in request.files:
-            additives_file = request.files['additives_file']
-            if additives_file.filename != '':
-                additives_path = os.path.join(files_dir, secure_filename(additives_file.filename))
-                additives_file.save(additives_path)
+            if 'additives_file' in request.files:
+                additives_file = request.files['additives_file']
+                if additives_file.filename != '':
+                    additives_path = os.path.join(files_dir, secure_filename(additives_file.filename))
+                    additives_file.save(additives_path)
         
-        # Check required files
-        if not components_path or not grades_path:
-            return jsonify({'error': 'Components and grades files are required'}), 400
+            # Check required files
+            if not components_path or not grades_path:
+                return jsonify({'error': 'Components and grades files are required'}), 400
         
-        # Get parameters from form data
-        grades_to_optimize = request.form.get('grades_to_optimize', '').split()
-        flat_price = request.form.get('flat_price', '700.0')
-        rvp_exp = request.form.get('rvp_exp', '1.25')
-        solver = request.form.get('solver', 'trust-constr')
-        output_format = request.form.get('output_format', 'json')
-        include_shadow_prices = request.form.get('include_shadow_prices') == 'true'
-        include_neutral_prices = request.form.get('include_neutral_prices') == 'true'
+            # Get parameters from form data
+            grades_to_optimize = request.form.get('grades_to_optimize', '').split()
+            flat_price = request.form.get('flat_price', '700.0')
+            rvp_exp = request.form.get('rvp_exp', '1.25')
+            solver = request.form.get('solver', 'trust-constr')
+            output_format = request.form.get('output_format', 'json')
+            include_shadow_prices = request.form.get('include_shadow_prices') == 'true'
+            include_neutral_prices = request.form.get('include_neutral_prices') == 'true'
         
-        # Build command
-        cmd = [
-            'fuel-blending',
-            'optimize',
-            components_path,
-        ]
-        # Add grades to optimize as positional arguments if provided
-        if grades_to_optimize:
-            cmd.extend(grades_to_optimize)
-        cmd.extend([
-            '--grades-file', grades_path,
-            '--output-path', os.path.join(output_dir, 'optimization'),
-            '--output-format', output_format,
-            '--flat-price', flat_price,
-            '--rvp-exp', rvp_exp,
-            '--solver', solver
-        ])
+            # Build command
+            cmd = [
+                'fuel-blending',
+                'optimize',
+                components_path,
+            ]
+            # Add grades to optimize as positional arguments if provided
+            if grades_to_optimize:
+                cmd.extend(grades_to_optimize)
+            cmd.extend([
+                '--grades-file', grades_path,
+                '--output-path', os.path.join(output_dir, 'optimization'),
+                '--output-format', output_format,
+                '--flat-price', flat_price,
+                '--rvp-exp', rvp_exp,
+                '--solver', solver
+            ])
         
-        # Add optional arguments
-        if additives_path:
-            cmd.extend(['--additives', additives_path])
+            # Add optional arguments
+            if additives_path:
+                cmd.extend(['--additives', additives_path])
         
-        if include_shadow_prices:
-            cmd.append('--include-shadow-prices')
+            if include_shadow_prices:
+                cmd.append('--include-shadow-prices')
         
-        if include_neutral_prices:
-            cmd.append('--include-neutral-prices')
+            if include_neutral_prices:
+                cmd.append('--include-neutral-prices')
         
-        # Run command
-        logger.info(f"API running command: {' '.join(cmd)}")
-        result = subprocess.run(cmd, capture_output=True, text=True)
+            # Run command
+            logger.info(f"API running command: {' '.join(cmd)}")
+            result = subprocess.run(cmd, capture_output=True, text=True)
         
-        if result.returncode != 0:
-            return jsonify({
-                'error': 'Optimization failed',
-                'message': result.stderr
-            }), 500
+            if result.returncode != 0:
+                return jsonify({
+                    'error': 'Optimization failed',
+                    'message': result.stderr
+                }), 500
         
-        # Collect results
-        response_data = {
-            'status': 'success',
-            'command_output': result.stdout,
-            'results': None,
-            'shadow_prices': None,
-            'neutral_prices': None
-        }
+            # Collect results
+            response_data = {
+                'status': 'success',
+                'command_output': result.stdout,
+                'results': None,
+                'shadow_prices': None,
+                'neutral_prices': None
+            }
         
-        # Read result files
-        result_file = os.path.join(output_dir, f'optimization_optimization_results.{output_format}')
-        if os.path.exists(result_file):
-            if output_format == 'json':
-                with open(result_file, 'r') as f:
-                    response_data['results'] = json.load(f)
-            else:  # csv
-                response_data['results'] = pd.read_csv(result_file).to_dict(orient='records')
-        
-        shadow_prices_file = os.path.join(output_dir, 'optimization_shadow_prices.json')
-        if os.path.exists(shadow_prices_file):
-            with open(shadow_prices_file, 'r') as f:
-                response_data['shadow_prices'] = json.load(f)
-        
-        neutral_prices_file = os.path.join(output_dir, 'optimization_neutral_prices.json')
-        if os.path.exists(neutral_prices_file):
-            with open(neutral_prices_file, 'r') as f:
-                response_data['neutral_prices'] = json.load(f)
-        
-        return jsonify(response_data)
+            # Read result files
+            result_file = os.path.join(output_dir, f'optimization_optimization_results.{output_format}')
+            if os.path.exists(result_file):
+                if output_format == 'json':
+                    with open(result_file, 'r') as f:
+                        response_data['results'] = json.load(f)
+                else:  # csv
+                    response_data['results'] = pd.read_csv(result_file).to_dict(orient='records')
+
+            shadow_prices_file = os.path.join(output_dir, 'optimization_shadow_prices.json')
+            if os.path.exists(shadow_prices_file):
+                with open(shadow_prices_file, 'r') as f:
+                    response_data['shadow_prices'] = json.load(f)
+
+            neutral_prices_file = os.path.join(output_dir, 'optimization_neutral_prices.json')
+            if os.path.exists(neutral_prices_file):
+                with open(neutral_prices_file, 'r') as f:
+                    response_data['neutral_prices'] = json.load(f)
+
+            return jsonify(response_data)
         
     except Exception as e:
         logger.exception("API error")
@@ -548,118 +548,118 @@ def api_eval_candidate():
     """API endpoint for candidate evaluation"""
     try:
         # Create a temporary directory for this request
-        temp_dir = tempfile.mkdtemp(prefix='fuel_blending_api_')
-        files_dir = os.path.join(temp_dir, 'files')
-        os.makedirs(files_dir, exist_ok=True)
-        output_dir = os.path.join(temp_dir, 'output')
-        os.makedirs(output_dir, exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix='fuel_blending_api_') as temp_dir:
+            files_dir = os.path.join(temp_dir, 'files')
+            os.makedirs(files_dir, exist_ok=True)
+            output_dir = os.path.join(temp_dir, 'output')
+            os.makedirs(output_dir, exist_ok=True)
         
-        # Process uploaded files
-        candidates_path = None
-        grades_path = None
-        results_path = None
-        components_np_path = None
-        additives_path = None
+            # Process uploaded files
+            candidates_path = None
+            grades_path = None
+            results_path = None
+            components_np_path = None
+            additives_path = None
         
-        # Get file data from request
-        if 'candidates_file' in request.files:
-            candidates_file = request.files['candidates_file']
-            if candidates_file.filename != '':
-                candidates_path = os.path.join(files_dir, secure_filename(candidates_file.filename))
-                candidates_file.save(candidates_path)
+            # Get file data from request
+            if 'candidates_file' in request.files:
+                candidates_file = request.files['candidates_file']
+                if candidates_file.filename != '':
+                    candidates_path = os.path.join(files_dir, secure_filename(candidates_file.filename))
+                    candidates_file.save(candidates_path)
         
-        if 'grades_file' in request.files:
-            grades_file = request.files['grades_file']
-            if grades_file.filename != '':
-                grades_path = os.path.join(files_dir, secure_filename(grades_file.filename))
-                grades_file.save(grades_path)
+            if 'grades_file' in request.files:
+                grades_file = request.files['grades_file']
+                if grades_file.filename != '':
+                    grades_path = os.path.join(files_dir, secure_filename(grades_file.filename))
+                    grades_file.save(grades_path)
         
-        if 'results_file' in request.files:
-            results_file = request.files['results_file']
-            if results_file.filename != '':
-                results_path = os.path.join(files_dir, secure_filename(results_file.filename))
-                results_file.save(results_path)
+            if 'results_file' in request.files:
+                results_file = request.files['results_file']
+                if results_file.filename != '':
+                    results_path = os.path.join(files_dir, secure_filename(results_file.filename))
+                    results_file.save(results_path)
         
-        if 'components_np_file' in request.files:
-            components_np_file = request.files['components_np_file']
-            if components_np_file.filename != '':
-                components_np_path = os.path.join(files_dir, secure_filename(components_np_file.filename))
-                components_np_file.save(components_np_path)
+            if 'components_np_file' in request.files:
+                components_np_file = request.files['components_np_file']
+                if components_np_file.filename != '':
+                    components_np_path = os.path.join(files_dir, secure_filename(components_np_file.filename))
+                    components_np_file.save(components_np_path)
         
-        if 'additives_file' in request.files:
-            additives_file = request.files['additives_file']
-            if additives_file.filename != '':
-                additives_path = os.path.join(files_dir, secure_filename(additives_file.filename))
-                additives_file.save(additives_path)
+            if 'additives_file' in request.files:
+                additives_file = request.files['additives_file']
+                if additives_file.filename != '':
+                    additives_path = os.path.join(files_dir, secure_filename(additives_file.filename))
+                    additives_file.save(additives_path)
         
-        # Check required files
-        if not all([candidates_path, grades_path, results_path, components_np_path]):
-            return jsonify({'error': 'All required files must be provided'}), 400
+            # Check required files
+            if not all([candidates_path, grades_path, results_path, components_np_path]):
+                return jsonify({'error': 'All required files must be provided'}), 400
         
-        # Get parameters from form data
-        flat_price = request.form.get('flat_price', '700.0')
-        output_format = request.form.get('format', 'json')
+            # Get parameters from form data
+            flat_price = request.form.get('flat_price', '700.0')
+            output_format = request.form.get('format', 'json')
         
-        # Build command
-        cmd = [
-            'fuel-blending',
-            'eval-candidate',
-            candidates_path,
-            grades_path,
-            results_path,
-            components_np_path,
-            '--output', os.path.join(output_dir, 'evaluation'),
-            '--format', output_format,
-            '--flat-price', flat_price
-        ]
+            # Build command
+            cmd = [
+                'fuel-blending',
+                'eval-candidate',
+                candidates_path,
+                grades_path,
+                results_path,
+                components_np_path,
+                '--output', os.path.join(output_dir, 'evaluation'),
+                '--format', output_format,
+                '--flat-price', flat_price
+            ]
         
-        # Add optional arguments
-        if additives_path:
-            cmd.extend(['--additives', additives_path])
+            # Add optional arguments
+            if additives_path:
+                cmd.extend(['--additives', additives_path])
         
-        # Run command
-        logger.info(f"API running command: {' '.join(cmd)}")
-        result = subprocess.run(cmd, capture_output=True, text=True)
+            # Run command
+            logger.info(f"API running command: {' '.join(cmd)}")
+            result = subprocess.run(cmd, capture_output=True, text=True)
         
-        if result.returncode != 0:
-            return jsonify({
-                'error': 'Evaluation failed',
-                'message': result.stderr
-            }), 500
+            if result.returncode != 0:
+                return jsonify({
+                    'error': 'Evaluation failed',
+                    'message': result.stderr
+                }), 500
         
-        # Define the specific output directory used by the CLI
-        cli_output_dir = os.path.join(output_dir, 'evaluation')
+            # Define the specific output directory used by the CLI
+            cli_output_dir = os.path.join(output_dir, 'evaluation')
 
-        # Collect results
-        response_data = {
-            'status': 'success',
-            'command_output': result.stdout,
-            'evaluations': None,
-            'neutral_prices': None
-        }
+            # Collect results
+            response_data = {
+                'status': 'success',
+                'command_output': result.stdout,
+                'evaluations': None,
+                'neutral_prices': None
+            }
         
-        # Read result files
-        # Adjusted filename
-        evaluation_file = os.path.join(cli_output_dir, f'candidate_evaluation.{output_format}')
-        if os.path.exists(evaluation_file):
-            if output_format == 'json':
-                with open(evaluation_file, 'r') as f:
-                    response_data['evaluations'] = json.load(f)
-            else:  # csv
-                response_data['evaluations'] = pd.read_csv(evaluation_file).to_dict(orient='records')
-        else:
-            logger.warning(f"API: Evaluation result file not found: {evaluation_file}")
-            if os.path.exists(cli_output_dir):
-                logger.warning(f"API: Files in output directory '{cli_output_dir}': {os.listdir(cli_output_dir)}")
+            # Read result files
+            # Adjusted filename
+            evaluation_file = os.path.join(cli_output_dir, f'candidate_evaluation.{output_format}')
+            if os.path.exists(evaluation_file):
+                if output_format == 'json':
+                    with open(evaluation_file, 'r') as f:
+                        response_data['evaluations'] = json.load(f)
+                else:  # csv
+                    response_data['evaluations'] = pd.read_csv(evaluation_file).to_dict(orient='records')
+            else:
+                logger.warning(f"API: Evaluation result file not found: {evaluation_file}")
+                if os.path.exists(cli_output_dir):
+                    logger.warning(f"API: Files in output directory '{cli_output_dir}': {os.listdir(cli_output_dir)}")
 
-        # Adjusted filename
-        neutral_prices_file = os.path.join(cli_output_dir, 'neutral_prices.csv')
-        if os.path.exists(neutral_prices_file):
-            response_data['neutral_prices'] = pd.read_csv(neutral_prices_file).to_dict(orient='records')
-        else:
-            logger.warning(f"API: Neutral prices file not found: {neutral_prices_file}")
+            # Adjusted filename
+            neutral_prices_file = os.path.join(cli_output_dir, 'neutral_prices.csv')
+            if os.path.exists(neutral_prices_file):
+                response_data['neutral_prices'] = pd.read_csv(neutral_prices_file).to_dict(orient='records')
+            else:
+                logger.warning(f"API: Neutral prices file not found: {neutral_prices_file}")
             
-        return jsonify(response_data)
+            return jsonify(response_data)
         
     except Exception as e:
         logger.exception("API error")
