@@ -16,6 +16,9 @@ import sys
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'fuel-blending-app-secret-key')
 
+# Ensure the log directory exists before configuring logging
+os.makedirs('logs', exist_ok=True)
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
