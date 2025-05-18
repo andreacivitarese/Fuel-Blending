@@ -1,0 +1,58 @@
+{
+  "Regular": {
+    "grade_name": "Regular",
+    "success": true,
+    "message": "Optimization terminated successfully",
+    "solver": "slsqp",
+    "elapsed_time": 0.4630153179168701,
+    "iterations": 6,
+    "optimal_cost": 455.00000153314454,
+    "optimal_fractions": {
+      "Naphtha_Light_as_is": 2.4934299493586423e-10,
+      "Naphtha_Heavy_factor": 1.831363347939275e-09,
+      "Reformate_escalated": 0.0,
+      "Ethanol": 0.0,
+      "Isomerate": 0.0,
+      "Alkylate": 0.0,
+      "FCC_Naphtha": 0.0,
+      "Butane": 1.0,
+      "MTBE": 0.0,
+      "Toluene": 0.0,
+      "Eurograde 60 kpa": 4.811079269254285e-10
+    },
+    "final_properties": {
+      "aromatics": 2.928427797726833e-08,
+      "mtbe": 0.0,
+      "benzene": 1.8433303904854239e-09,
+      "e150": 0.0,
+      "density": 0.5800000003550448,
+      "e70": 99.99999984430502,
+      "t10": -4.999999863362545,
+      "olefins": 7.402224338524931e-09,
+      "t50": -4.999999786979525,
+      "sulfur_ppm": 1.000000016483636,
+      "oxy_wt": 0.0,
+      "ron": 92.99999995510393,
+      "ron_average": 92.99999995510393,
+      "mon": 91.99999995058835,
+      "rvp": 59.99999989129118
+    },
+    "shadow_prices": {},
+    "violations": {},
+    "attempts_log": [
+      {
+        "attempt": 1,
+        "solver": "slsqp",
+        "success": true,
+        "status": 0,
+        "message": "Optimization terminated successfully",
+        "nfev": 6,
+        "njev": 5,
+        "nit": 6,
+        "cost": 455.00000153314454,
+        "time_seconds": 0.4619140625
+      }
+    ],
+    "premium_to_flat_price_usd_mt": -244.99999846685546
+  }
+}

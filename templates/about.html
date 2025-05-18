@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}About - Fuel Blending Optimization{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h4 mb-0"><i class="fas fa-info-circle me-2"></i>About Fuel Blending Optimization</h2>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h3 class="h5">Overview</h3>
+                        <p>The Fuel Blending Optimization Web Application provides a user-friendly interface to the powerful Fuel Blending Optimization Package. This application is designed to help refineries and blending operations achieve optimal results through sophisticated mathematical optimization techniques.</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h3 class="h5">Core Capabilities</h3>
+                        <ul class="list-group mb-3">
+                            <li class="list-group-item">
+                                <strong><i class="fas fa-cogs text-primary me-2"></i>Blend Optimization</strong>
+                                <p class="mb-0 mt-1">Find the least-cost blend recipe that meets all specified quality constraints for various fuel grades.</p>
+                            </li>
+                            <li class="list-group-item">
+                                <strong><i class="fas fa-flask text-primary me-2"></i>Candidate Evaluation</strong>
+                                <p class="mb-0 mt-1">Assess the economic impact and feasibility of user-defined blend recipes compared to the optimal solution.</p>
+                            </li>
+                            <li class="list-group-item">
+                                <strong><i class="fas fa-tags text-primary me-2"></i>Economic Analysis</strong>
+                                <p class="mb-0 mt-1">Calculate shadow prices and neutral prices to understand the economic impact of constraints and component costs.</p>
+                            </li>
+                            <li class="list-group-item">
+                                <strong><i class="fas fa-file-excel text-primary me-2"></i>Flexible Data Management</strong>
+                                <p class="mb-0 mt-1">Support for various file formats (Excel, CSV, JSON, YAML) for input data and results.</p>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h3 class="h5">Technical Details</h3>
+                        <p>The application leverages these key technologies:</p>
+                        <ul>
+                            <li><strong>Backend:</strong> Flask (Python web framework)</li>
+                            <li><strong>Frontend:</strong> Bootstrap 5, JavaScript, Chart.js</li>
+                            <li><strong>Optimization Core:</strong> SciPy optimization algorithms (SLSQP, trust-constr, COBYLA)</li>
+                            <li><strong>Data Processing:</strong> Pandas, NumPy</li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h3 class="h5">Development Philosophy</h3>
+                        <p>This application was designed with the following principles in mind:</p>
+                        <ul>
+                            <li><strong>User-Centric Design:</strong> Intuitive interfaces for non-technical users while offering advanced functionality for experts.</li>
+                            <li><strong>Performance:</strong> Optimized for handling complex optimization problems efficiently.</li>
+                            <li><strong>Flexibility:</strong> Support for a wide range of input data formats and optimization scenarios.</li>
+                            <li><strong>Visualization:</strong> Clear graphical representation of results for better understanding and decision-making.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h4 mb-0"><i class="fas fa-code me-2"></i>Technical Architecture</h2>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h3 class="h5">System Architecture</h3>
+                        <p>The web application follows a layered architecture pattern:</p>
+                        <ol>
+                            <li><strong>Presentation Layer:</strong> HTML templates with Bootstrap styling and JavaScript for interactivity</li>
+                            <li><strong>Application Layer:</strong> Flask routes and controllers that handle HTTP requests and responses</li>
+                            <li><strong>Service Layer:</strong> Python modules that interact with the Fuel Blending Optimization package</li>
+                            <li><strong>Core Optimization Layer:</strong> The underlying Fuel Blending Optimization package with its models and algorithms</li>
+                        </ol>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h3 class="h5">Key Features</h3>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h4 class="h6">Data Handling</h4>
+                                        <ul class="small">
+                                            <li>Support for multiple file formats</li>
+                                            <li>Automated validation of input data</li>
+                                            <li>Secure file uploads</li>
+                                            <li>Session-based storage</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h4 class="h6">Optimization</h4>
+                                        <ul class="small">
+                                            <li>Multiple solver options</li>
+                                            <li>Constraint management</li>
+                                            <li>Cost calculation</li>
+                                            <li>Property calculation</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h4 class="h6">Visualization</h4>
+                                        <ul class="small">
+                                            <li>Interactive charts</li>
+                                            <li>Tabular data representation</li>
+                                            <li>Color-coded indicators</li>
+                                            <li>Responsive design</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h4 class="h6">Results Analysis</h4>
+                                        <ul class="small">
+                                            <li>Shadow price analysis</li>
+                                            <li>Neutral price calculation</li>
+                                            <li>Constraint validation</li>
+                                            <li>Economic comparison</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="h5">Version Information</h3>
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr>
+                                    <th scope="row">Web Application Version</th>
+                                    <td>1.0.0</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Fuel Blending Package Version</th>
+                                    <td>1.3.4</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Last Updated</th>
+                                    <td>May 2025</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

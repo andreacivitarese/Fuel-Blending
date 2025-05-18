@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Optimize - Fuel Blending{% endblock %}
+
+{% block extra_css %}
+<style>
+    .file-upload {
+        position: relative;
+    }
+    .file-upload-info {
+        margin-top: 5px;
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    .form-section {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    .form-section-title {
+        margin-bottom: 15px;
+        color: #0d6efd;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-cogs me-2"></i>Blend Optimization</h1>
+            <a href="{{ url_for('help_page') }}" class="btn btn-outline-info">
+                <i class="fas fa-question-circle me-1"></i> Help
+            </a>
+        </div>
+        
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i> This tool finds the least-cost blend recipe that meets all specified quality constraints for various fuel grades.
+        </div>
+        
+        <div class="card shadow">
+            <div class="card-body">
+                <form action="{{ url_for('optimize') }}" method="post" enctype="multipart/form-data">
+                    
+                    <div class="form-section">
+                        <h4 class="form-section-title"><i class="fas fa-file-upload me-2"></i>Input Files</h4>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="components_file" class="form-label">Components File <span class="text-danger">*</span></label>
+                                <div class="file-upload">
+                                    <input type="file" class="form-control" id="components_file" name="components_file" required>
+                                    <div class="file-upload-info">
+                                        <i class="fas fa-info-circle"></i> Excel/CSV file with component properties and costs.
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="grades_file" class="form-label">Grades File <span class="text-danger">*</span></label>
+                                <div class="file-upload">
+                                    <input type="file" class="form-control" id="grades_file" name="grades_file" required>
+                                    <div class="file-upload-info">
+                                        <i class="fas fa-info-circle"></i> Excel/JSON file with grade specifications.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="additives_file" class="form-label">Additives File <span class="text-muted">(Optional)</span></label>
+                                <div class="file-upload">
+                                    <input type="file" class="form-control" id="additives_file" name="additives_file">
+                                    <div class="file-upload-info">
+                                        <i class="fas fa-info-circle"></i> Excel/YAML file with additive data.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h4 class="form-section-title"><i class="fas fa-sliders-h me-2"></i>Optimization Parameters</h4>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="grades_to_optimize" class="form-label">Grades to Optimize <span class="text-muted">(Optional)</span></label>
+                                <input type="text" class="form-control" id="grades_to_optimize" name="grades_to_optimize" placeholder="e.g., Regular Premium">
+                                <div class="form-text">Space-separated list of grade names to optimize. Leave empty to optimize all grades.</div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="flat_price" class="form-label">Flat Price (USD/mt)</label>
+                                <input type="number" class="form-control" id="flat_price" name="flat_price" value="700.0" step="0.1" min="0">
+                                <div class="form-text">Base flat price used for component pricing and neutral price calculations.</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="rvp_exp" class="form-label">RVP Exponent</label>
+                                <input type="number" class="form-control" id="rvp_exp" name="rvp_exp" value="1.25" step="0.01" min="0">
+                                <div class="form-text">Exponent used in RVP calculation.</div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label for="solver" class="form-label">Solver</label>
+                                <select class="form-select" id="solver" name="solver">
+                                    <option value="trust-constr" selected>trust-constr</option>
+                                    <option value="slsqp">slsqp</option>
+                                    <option value="cobyla">cobyla</option>
+                                </select>
+                                <div class="form-text">Optimization solver to use.</div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label for="output_format" class="form-label">Output Format</label>
+                                <select class="form-select" id="output_format" name="output_format">
+                                    <option value="json" selected>JSON</option>
+                                    <option value="csv">CSV</option>
+                                </select>
+                                <div class="form-text">Format for output files.</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="include_shadow_prices" name="include_shadow_prices" checked>
+                                    <label class="form-check-label" for="include_shadow_prices">Include Shadow Prices</label>
+                                </div>
+                                <div class="form-text">Include shadow prices (Lagrange multipliers) in the output.</div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="include_neutral_prices" name="include_neutral_prices" checked>
+                                    <label class="form-check-label" for="include_neutral_prices">Include Neutral Prices</label>
+                                </div>
+                                <div class="form-text">Calculate and include neutral prices in the output.</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="reset" class="btn btn-outline-secondary">
+                            <i class="fas fa-undo me-1"></i> Reset
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-play me-1"></i> Run Optimization
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="mt-4">
+            <div class="alert alert-secondary">
+                <h5><i class="fas fa-lightbulb me-2"></i>Tips for Successful Optimization</h5>
+                <ul class="mb-0">
+                    <li>Make sure your components file includes all required properties (RON, MON, RVP, etc.) with correct values.</li>
+                    <li>Check that your grades file specifies proper constraints (min/max values) for all relevant properties.</li>
+                    <li>If using additives, ensure they have the correct cost and density values.</li>
+                    <li>The solver may need multiple attempts for complex optimization problems. If one solver fails, try another.</li>
+                    <li>Review the detailed documentation in the Help section for more information on input file formats and parameter settings.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Add file name display for file inputs
+        $('input[type="file"]').on('change', function() {
+            let fileName = $(this).val().split('\\').pop();
+            if (fileName) {
+                $(this).next('.file-upload-info').html('<i class="fas fa-check-circle text-success"></i> Selected: <strong>' + fileName + '</strong>');
+            } else {
+                $(this).next('.file-upload-info').html('<i class="fas fa-info-circle"></i> Excel/CSV file with component properties and costs.');
+            }
+        });
+    });
+</script>
+{% endblock %} 

@@ -1,0 +1,513 @@
+{% extends "base.html" %}
+
+{% block title %}Optimization Results - Fuel Blending{% endblock %}
+
+{% block extra_css %}
+<style>
+    .results-tabs .nav-link {
+        color: #495057;
+    }
+    .results-tabs .nav-link.active {
+        font-weight: 600;
+        color: #0d6efd;
+    }
+    .property-table th {
+        background-color: #f8f9fa;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+    .component-chart {
+        min-height: 300px;
+        margin-bottom: 20px;
+    }
+    .badge-success {
+        background-color: #198754;
+        color: white;
+    }
+    .badge-danger {
+        background-color: #dc3545;
+        color: white;
+    }
+    .results-card {
+        height: 100%;
+        transition: all 0.3s;
+    }
+    .results-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    .download-section {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        margin-top: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-chart-pie me-2"></i>Optimization Results</h1>
+    <div>
+        <a href="{{ url_for('optimize') }}" class="btn btn-outline-primary me-2">
+            <i class="fas fa-cogs me-1"></i> New Optimization
+        </a>
+        <a href="{{ url_for('help_page') }}" class="btn btn-outline-info">
+            <i class="fas fa-question-circle me-1"></i> Help
+        </a>
+    </div>
+</div>
+
+<div class="alert alert-success">
+    <i class="fas fa-check-circle me-2"></i> Optimization completed successfully. Results are displayed below.
+</div>
+
+<!-- Results Summary Cards -->
+<div class="row mb-4">
+    {% for result in results %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card shadow results-card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">{{ result.grade_name }}</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="fw-bold">Status:</span>
+                    <span class="badge {% if result.success %}badge-success{% else %}badge-danger{% endif %} p-2">
+                        {{ 'SUCCESS' if result.success else 'FAILED' }}
+                    </span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Cost:</span>
+                    <span class="fw-bold">{{ "%.2f"|format(result.optimal_cost) }} USD/mt</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Solver:</span>
+                    <span>{{ result.solver }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Iterations:</span>
+                    <span>{{ result.iterations }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-3">
+                    <span>Time:</span>
+                    <span>{{ "%.3f"|format(result.elapsed_time) }} sec</span>
+                </div>
+                
+                {% if result.success %}
+                <button class="btn btn-sm btn-outline-primary w-100" type="button" data-bs-toggle="collapse" data-bs-target="#collapseComponents{{ loop.index }}" aria-expanded="false">
+                    <i class="fas fa-eye me-1"></i> View Optimal Recipe
+                </button>
+                <div class="collapse mt-3" id="collapseComponents{{ loop.index }}">
+                    <div class="card card-body p-2">
+                        <h6 class="text-center mb-2">Component Distribution</h6>
+                        <div class="component-chart" id="componentChart{{ loop.index }}"></div>
+                        <table class="table table-sm table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Component</th>
+                                    <th>Fraction</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for comp_name, frac in result.optimal_fractions.items() %}
+                                <tr>
+                                    <td>{{ comp_name }}</td>
+                                    <td>{{ "%.4f"|format(frac) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% else %}
+                <div class="alert alert-danger">
+                    <small>{{ result.message }}</small>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                <button class="btn btn-sm btn-primary w-100" type="button" data-bs-toggle="modal" data-bs-target="#detailsModal{{ loop.index }}">
+                    <i class="fas fa-list-ul me-1"></i> View Detailed Results
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Detailed Results Tabs -->
+<div class="card shadow mb-4">
+    <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs results-tabs" id="resultsTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="properties-tab" data-bs-toggle="tab" data-bs-target="#properties" type="button" role="tab" aria-controls="properties" aria-selected="true">
+                    <i class="fas fa-vial me-1"></i> Final Properties
+                </button>
+            </li>
+            {% if shadow_prices %}
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="shadow-tab" data-bs-toggle="tab" data-bs-target="#shadow" type="button" role="tab" aria-controls="shadow" aria-selected="false">
+                    <i class="fas fa-tags me-1"></i> Shadow Prices
+                </button>
+            </li>
+            {% endif %}
+            {% if neutral_prices %}
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="neutral-tab" data-bs-toggle="tab" data-bs-target="#neutral" type="button" role="tab" aria-controls="neutral" aria-selected="false">
+                    <i class="fas fa-balance-scale me-1"></i> Neutral Prices
+                </button>
+            </li>
+            {% endif %}
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="json-tab" data-bs-toggle="tab" data-bs-target="#json" type="button" role="tab" aria-controls="json" aria-selected="false">
+                    <i class="fas fa-code me-1"></i> Raw Data
+                </button>
+            </li>
+        </ul>
+    </div>
+    <div class="card-body">
+        <div class="tab-content" id="resultsTabsContent">
+            <!-- Properties Tab -->
+            <div class="tab-pane fade show active" id="properties" role="tabpanel" aria-labelledby="properties-tab">
+                <div class="table-responsive" style="max-height: 500px;">
+                    <table class="table table-striped table-hover">
+                        <thead class="property-table">
+                            <tr>
+                                <th>Grade</th>
+                                {% set first_result = results[0] %}
+                                {% for prop_name in first_result.final_properties.keys() %}
+                                <th>{{ prop_name }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for result in results %}
+                            {% if result.success %}
+                            <tr>
+                                <td><strong>{{ result.grade_name }}</strong></td>
+                                {% for prop_name, prop_value in result.final_properties.items() %}
+                                <td>{{ "%.4g"|format(prop_value) }}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Shadow Prices Tab -->
+            {% if shadow_prices %}
+            <div class="tab-pane fade" id="shadow" role="tabpanel" aria-labelledby="shadow-tab">
+                <div class="alert alert-info mb-3">
+                    <i class="fas fa-info-circle me-2"></i> Shadow prices (Lagrange multipliers) indicate the sensitivity of the total blend cost to changes in the constraints. A positive shadow price for a maximum constraint means that increasing that limit would decrease the cost. For a minimum constraint, a positive shadow price means that decreasing that limit would decrease the cost.
+                </div>
+                <div class="table-responsive" style="max-height: 500px;">
+                    <table class="table table-striped table-hover">
+                        <thead class="property-table">
+                            <tr>
+                                <th>Grade</th>
+                                <th>Constraint</th>
+                                <th>Shadow Price</th>
+                                <th>Type</th>
+                                <th>Interpretation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for grade, constraints in shadow_prices.items() %}
+                                {% for constraint, value in constraints.items() %}
+                                <tr>
+                                    <td>{{ grade }}</td>
+                                    <td>{{ constraint }}</td>
+                                    <td>{{ "%.4g"|format(value) }}</td>
+                                    <td>{{ 'Minimum' if '_min' in constraint else 'Maximum' if '_max' in constraint else 'Equality' }}</td>
+                                    <td>
+                                        {% if value > 0.001 %}
+                                            {% if '_min' in constraint %}
+                                            Decreasing this minimum limit by 1 unit could reduce cost by approximately {{ "%.4g"|format(value) }} USD/mt.
+                                            {% elif '_max' in constraint %}
+                                            Increasing this maximum limit by 1 unit could reduce cost by approximately {{ "%.4g"|format(value) }} USD/mt.
+                                            {% else %}
+                                            This constraint has a significant impact on the optimal solution.
+                                            {% endif %}
+                                        {% else %}
+                                            This constraint has minimal impact on the optimal solution.
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Neutral Prices Tab -->
+            {% if neutral_prices %}
+            <div class="tab-pane fade" id="neutral" role="tabpanel" aria-labelledby="neutral-tab">
+                <div class="alert alert-info mb-3">
+                    <i class="fas fa-info-circle me-2"></i> Neutral prices represent the break-even price for each component in the blend. If a component's actual price is below its neutral price, including more of it would reduce the overall blend cost.
+                </div>
+                <div class="table-responsive" style="max-height: 500px;">
+                    <table class="table table-striped table-hover">
+                        <thead class="property-table">
+                            <tr>
+                                <th>Grade</th>
+                                <th>Component</th>
+                                <th>Current Price (USD/mt)</th>
+                                <th>Neutral Price (USD/mt)</th>
+                                <th>Difference</th>
+                                <th>Analysis</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for grade, components in neutral_prices.items() %}
+                                {% for component, data in components.items() %}
+                                <tr>
+                                    <td>{{ grade }}</td>
+                                    <td>{{ component }}</td>
+                                    <td>{{ "%.2f"|format(data.current_price) }}</td>
+                                    <td>{{ "%.2f"|format(data.neutral_price) }}</td>
+                                    <td class="{{ 'text-success' if data.neutral_price > data.current_price else 'text-danger' }}">
+                                        {{ "%.2f"|format(data.neutral_price - data.current_price) }}
+                                    </td>
+                                    <td>
+                                        {% if data.neutral_price > data.current_price %}
+                                        <span class="text-success">Undervalued - cost-effective to use</span>
+                                        {% else %}
+                                        <span class="text-danger">Overvalued - consider reducing usage</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Raw Data Tab -->
+            <div class="tab-pane fade" id="json" role="tabpanel" aria-labelledby="json-tab">
+                <pre class="bg-light p-3 rounded" style="max-height: 500px; overflow: auto;">{{ results | tojson(indent=2) }}</pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Download Section -->
+<div class="download-section">
+    <h4 class="mb-3"><i class="fas fa-download me-2"></i> Download Results</h4>
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <div class="d-grid">
+                <a href="{{ url_for('download_file', filename=session_id + '/optimization_optimization_results.' + output_format) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-file-download me-1"></i> Download Optimization Results
+                </a>
+            </div>
+        </div>
+        
+        {% if shadow_prices %}
+        <div class="col-md-4 mb-3">
+            <div class="d-grid">
+                <a href="{{ url_for('download_file', filename=session_id + '/optimization_shadow_prices.json') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-file-download me-1"></i> Download Shadow Prices
+                </a>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if neutral_prices %}
+        <div class="col-md-4 mb-3">
+            <div class="d-grid">
+                <a href="{{ url_for('download_file', filename=session_id + '/optimization_neutral_prices.json') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-file-download me-1"></i> Download Neutral Prices
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Result Detail Modals -->
+{% for result in results %}
+<div class="modal fade" id="detailsModal{{ loop.index }}" tabindex="-1" aria-labelledby="detailsModalLabel{{ loop.index }}" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailsModalLabel{{ loop.index }}">{{ result.grade_name }} - Detailed Results</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="nav nav-tabs mb-3" id="gradeDetailsTabs{{ loop.index }}" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="summary-tab{{ loop.index }}" data-bs-toggle="tab" data-bs-target="#summary{{ loop.index }}" type="button" role="tab" aria-controls="summary{{ loop.index }}" aria-selected="true">Summary</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="properties-tab{{ loop.index }}" data-bs-toggle="tab" data-bs-target="#properties{{ loop.index }}" type="button" role="tab" aria-controls="properties{{ loop.index }}" aria-selected="false">Properties</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="components-tab{{ loop.index }}" data-bs-toggle="tab" data-bs-target="#components{{ loop.index }}" type="button" role="tab" aria-controls="components{{ loop.index }}" aria-selected="false">Components</button>
+                    </li>
+                </ul>
+                <div class="tab-content" id="gradeDetailsTabsContent{{ loop.index }}">
+                    <!-- Summary Tab -->
+                    <div class="tab-pane fade show active" id="summary{{ loop.index }}" role="tabpanel" aria-labelledby="summary-tab{{ loop.index }}">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <tbody>
+                                    <tr>
+                                        <th scope="row">Grade</th>
+                                        <td>{{ result.grade_name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Status</th>
+                                        <td><span class="badge {% if result.success %}badge-success{% else %}badge-danger{% endif %} p-2">
+                                            {{ 'SUCCESS' if result.success else 'FAILED' }}
+                                        </span></td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Message</th>
+                                        <td>{{ result.message }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Optimal Cost</th>
+                                        <td>{{ "%.4f"|format(result.optimal_cost) }} USD/mt</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Solver</th>
+                                        <td>{{ result.solver }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Iterations</th>
+                                        <td>{{ result.iterations }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Elapsed Time</th>
+                                        <td>{{ "%.3f"|format(result.elapsed_time) }} seconds</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Properties Tab -->
+                    <div class="tab-pane fade" id="properties{{ loop.index }}" role="tabpanel" aria-labelledby="properties-tab{{ loop.index }}">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Property</th>
+                                        <th>Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for prop_name, prop_value in result.final_properties.items() %}
+                                    <tr>
+                                        <td>{{ prop_name }}</td>
+                                        <td>{{ "%.6g"|format(prop_value) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Components Tab -->
+                    <div class="tab-pane fade" id="components{{ loop.index }}" role="tabpanel" aria-labelledby="components-tab{{ loop.index }}">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Component</th>
+                                        <th>Mass Fraction</th>
+                                        <th>Percentage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for comp_name, frac in result.optimal_fractions.items() %}
+                                    <tr>
+                                        <td>{{ comp_name }}</td>
+                                        <td>{{ "%.6f"|format(frac) }}</td>
+                                        <td>{{ "%.2f"|format(frac * 100) }}%</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set up pie charts for component fractions
+        {% for result in results %}
+        {% if result.success %}
+        var ctx{{ loop.index }} = document.getElementById('componentChart{{ loop.index }}');
+        if (ctx{{ loop.index }}) {
+            var componentNames = [];
+            var fractions = [];
+            var backgroundColors = [
+                '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', 
+                '#6f42c1', '#fd7e14', '#20c9a6', '#5a5c69', '#858796'
+            ];
+            
+            {% for comp_name, frac in result.optimal_fractions.items() %}
+            componentNames.push('{{ comp_name }}');
+            fractions.push({{ frac }});
+            {% endfor %}
+            
+            new Chart(ctx{{ loop.index }}, {
+                type: 'doughnut',
+                data: {
+                    labels: componentNames,
+                    datasets: [{
+                        data: fractions,
+                        backgroundColor: backgroundColors.slice(0, componentNames.length),
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    var label = context.label || '';
+                                    var value = (context.raw * 100).toFixed(2) + '%';
+                                    return label + ': ' + value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        {% endif %}
+        {% endfor %}
+    });
+</script>
+{% endblock %} 

@@ -1,0 +1,439 @@
+{% extends "base.html" %}
+
+{% block title %}Help - Fuel Blending Optimization{% endblock %}
+
+{% block extra_css %}
+<style>
+    .help-section {
+        margin-bottom: 30px;
+    }
+    .help-toc {
+        position: sticky;
+        top: 20px;
+    }
+    .help-section-title {
+        color: #0d6efd;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .file-format-table th {
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-3">
+        <div class="help-toc card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0 h5">Contents</h4>
+            </div>
+            <div class="card-body">
+                <nav id="help-nav" class="nav flex-column">
+                    <a class="nav-link" href="#getting-started">Getting Started</a>
+                    <a class="nav-link" href="#file-formats">File Formats</a>
+                    <a class="nav-link" href="#optimization">Optimization</a>
+                    <a class="nav-link" href="#evaluation">Candidate Evaluation</a>
+                    <a class="nav-link" href="#results">Understanding Results</a>
+                    <a class="nav-link" href="#troubleshooting">Troubleshooting</a>
+                </nav>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-9">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h1 class="mb-0 h4"><i class="fas fa-question-circle me-2"></i>Help & Documentation</h1>
+            </div>
+            <div class="card-body">
+                <section id="getting-started" class="help-section">
+                    <h2 class="help-section-title">Getting Started</h2>
+                    <p>The Fuel Blending Optimization Web Application provides two main functionalities:</p>
+                    <ul>
+                        <li><strong>Blend Optimization:</strong> Find the least-cost blend recipe that meets all specified quality constraints for various fuel grades.</li>
+                        <li><strong>Candidate Evaluation:</strong> Assess the economic impact and feasibility of user-defined or alternative blend recipes compared to the optimal solution.</li>
+                    </ul>
+                    <p>To get started, you'll need to prepare input files with your components, grades, and optional additives data. The application accepts Excel, CSV, JSON, and YAML formats for these inputs.</p>
+                </section>
+                
+                <section id="file-formats" class="help-section">
+                    <h2 class="help-section-title">File Formats</h2>
+                    
+                    <h3 class="h5 mb-3">Components File (Excel/CSV)</h3>
+                    <p>This file defines the properties and costs of the available blending components.</p>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered file-format-table">
+                            <thead>
+                                <tr>
+                                    <th>Column</th>
+                                    <th>Description</th>
+                                    <th>Required</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Name</td>
+                                    <td>Unique name for the component</td>
+                                    <td>Yes</td>
+                                </tr>
+                                <tr>
+                                    <td>Delta Type</td>
+                                    <td>Pricing type (as_is, factor, escalated)</td>
+                                    <td>Yes</td>
+                                </tr>
+                                <tr>
+                                    <td>Delta Value</td>
+                                    <td>Pricing delta in USD/mt (for as_is)</td>
+                                    <td>Conditional</td>
+                                </tr>
+                                <tr>
+                                    <td>Density</td>
+                                    <td>Component density (kg/m³)</td>
+                                    <td>Yes</td>
+                                </tr>
+                                <tr>
+                                    <td>Is Ethanol</td>
+                                    <td>Flag indicating if component is ethanol (TRUE/FALSE)</td>
+                                    <td>Optional</td>
+                                </tr>
+                                <tr>
+                                    <td>RON, MON, RVP, etc.</td>
+                                    <td>Property columns for each relevant property</td>
+                                    <td>Yes</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <h3 class="h5 mb-3">Grades File (Excel/JSON)</h3>
+                    <p>This file defines the target specifications for the final fuel grades.</p>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered file-format-table">
+                            <thead>
+                                <tr>
+                                    <th>Column/Field</th>
+                                    <th>Description</th>
+                                    <th>Required</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Name</td>
+                                    <td>Unique name for the grade</td>
+                                    <td>Yes</td>
+                                </tr>
+                                <tr>
+                                    <td>Specs</td>
+                                    <td>JSON object with property constraints: {"property": [min, max]}</td>
+                                    <td>Yes</td>
+                                </tr>
+                                <tr>
+                                    <td>Target Mass</td>
+                                    <td>Target mass in metric tons (defaults to 1.0)</td>
+                                    <td>Optional</td>
+                                </tr>
+                                <tr>
+                                    <td>Price Mode</td>
+                                    <td>Pricing mode (as_is or escalated)</td>
+                                    <td>Optional</td>
+                                </tr>
+                                <tr>
+                                    <td>Force Ethanol Enabled</td>
+                                    <td>Whether to force a specific ethanol content (TRUE/FALSE)</td>
+                                    <td>Optional</td>
+                                </tr>
+                                <tr>
+                                    <td>Force Ethanol Mass Frac</td>
+                                    <td>Required ethanol mass fraction if forcing is enabled</td>
+                                    <td>Conditional</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <h3 class="h5 mb-3">Additives File (Excel/YAML)</h3>
+                    <p>This optional file defines additives used in blending.</p>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered file-format-table">
+                            <thead>
+                                <tr>
+                                    <th>Column/Field</th>
+                                    <th>Description</th>
+                                    <th>Required</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Name</td>
+                                    <td>Unique name for the additive</td>
+                                    <td>Yes</td>
+                                </tr>
+                                <tr>
+                                    <td>Cost USD per Litre</td>
+                                    <td>Cost in USD per liter</td>
+                                    <td>Yes</td>
+                                </tr>
+                                <tr>
+                                    <td>Density Add</td>
+                                    <td>Density of the additive (kg/m³)</td>
+                                    <td>Yes</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <h3 class="h5 mb-3">Candidates File (Excel/CSV)</h3>
+                    <p>This file defines specific blend recipes to be evaluated in the candidate evaluation tool.</p>
+                    <div class="table-responsive">
+                        <table class="table table-bordered file-format-table">
+                            <thead>
+                                <tr>
+                                    <th>Column</th>
+                                    <th>Description</th>
+                                    <th>Required</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>candidate_id</td>
+                                    <td>Unique identifier for the candidate blend</td>
+                                    <td>Yes</td>
+                                </tr>
+                                <tr>
+                                    <td>grade_name</td>
+                                    <td>Name of the target grade this candidate is intended for</td>
+                                    <td>Yes</td>
+                                </tr>
+                                <tr>
+                                    <td>[Component Name]</td>
+                                    <td>One column for each component, with header being the exact component name</td>
+                                    <td>Yes</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+                
+                <section id="optimization" class="help-section">
+                    <h2 class="help-section-title">Optimization</h2>
+                    <p>The optimization tool finds the least-cost blend recipe that meets all specified quality constraints for various fuel grades.</p>
+                    
+                    <h3 class="h5 mb-3">How to Run an Optimization</h3>
+                    <ol>
+                        <li>Navigate to the <a href="{{ url_for('optimize') }}">Optimize</a> page.</li>
+                        <li>Upload your Components and Grades files (required), and Additives file (optional).</li>
+                        <li>Set optimization parameters:
+                            <ul>
+                                <li><strong>Grades to Optimize:</strong> Space-separated list of grade names to optimize. Leave empty to optimize all grades.</li>
+                                <li><strong>Flat Price:</strong> Base flat price used for component pricing and neutral price calculations.</li>
+                                <li><strong>RVP Exponent:</strong> Exponent used in RVP calculation.</li>
+                                <li><strong>Solver:</strong> Select the optimization solver to use (trust-constr, slsqp, or cobyla).</li>
+                                <li><strong>Output Format:</strong> Format for output files (JSON or CSV).</li>
+                                <li><strong>Shadow Prices:</strong> Whether to include shadow prices in the output.</li>
+                                <li><strong>Neutral Prices:</strong> Whether to calculate and include neutral prices in the output.</li>
+                            </ul>
+                        </li>
+                        <li>Click "Run Optimization" to start the process.</li>
+                    </ol>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> For complex optimization problems, try different solvers if one fails. The trust-constr solver is generally the most robust but can be slower.
+                    </div>
+                </section>
+                
+                <section id="evaluation" class="help-section">
+                    <h2 class="help-section-title">Candidate Evaluation</h2>
+                    <p>The candidate evaluation tool assesses the economic impact and feasibility of user-defined blend recipes compared to the optimal solution.</p>
+                    
+                    <h3 class="h5 mb-3">How to Run a Candidate Evaluation</h3>
+                    <ol>
+                        <li>Navigate to the <a href="{{ url_for('eval_candidate') }}">Evaluate Candidates</a> page.</li>
+                        <li>Upload the required files:
+                            <ul>
+                                <li><strong>Candidates File:</strong> Excel/CSV with your candidate blends to evaluate.</li>
+                                <li><strong>Grades File:</strong> Excel/JSON with grade specifications.</li>
+                                <li><strong>Results File:</strong> JSON file with results from a previous optimization run.</li>
+                                <li><strong>Components File for Neutral Prices:</strong> Excel/CSV with components for neutral price calculation.</li>
+                                <li><strong>Additives File:</strong> (Optional) Excel/YAML with additive data.</li>
+                            </ul>
+                        </li>
+                        <li>Set evaluation parameters:
+                            <ul>
+                                <li><strong>Flat Price:</strong> Base flat price used for cost calculations if not found in the results file.</li>
+                                <li><strong>Output Format:</strong> Format for output files (JSON or CSV).</li>
+                            </ul>
+                        </li>
+                        <li>Click "Run Evaluation" to start the process.</li>
+                    </ol>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> Make sure your candidates file has the correct structure with <code>candidate_id</code>, <code>grade_name</code>, and component columns that match exactly with the component names in your components file.
+                    </div>
+                </section>
+                
+                <section id="results" class="help-section">
+                    <h2 class="help-section-title">Understanding Results</h2>
+                    
+                    <h3 class="h5 mb-3">Optimization Results</h3>
+                    <p>The optimization results include:</p>
+                    <ul>
+                        <li><strong>Status:</strong> SUCCESS or FAILED for each grade optimization.</li>
+                        <li><strong>Cost:</strong> The minimum total cost per metric ton of the optimized blend.</li>
+                        <li><strong>Component Fractions:</strong> The mass fraction of each component in the optimal blend.</li>
+                        <li><strong>Blend Properties:</strong> The calculated properties of the final blend.</li>
+                        <li><strong>Shadow Prices:</strong> Indicators of the sensitivity of the total blend cost to changes in the constraints.</li>
+                        <li><strong>Neutral Prices:</strong> Break-even prices for components.</li>
+                    </ul>
+                    
+                    <h3 class="h5 mb-3">Candidate Evaluation Results</h3>
+                    <p>The candidate evaluation results include:</p>
+                    <ul>
+                        <li><strong>Constraints Satisfied:</strong> Whether the candidate blend meets all specifications for the target grade.</li>
+                        <li><strong>Candidate Cost:</strong> The calculated cost of the candidate blend.</li>
+                        <li><strong>Optimal Cost:</strong> The cost of the optimal blend for the same grade.</li>
+                        <li><strong>Delta Cost:</strong> The difference between the candidate cost and the optimal cost.</li>
+                        <li><strong>Properties:</strong> The calculated properties of the candidate blend compared to the optimal blend.</li>
+                        <li><strong>Neutral Prices:</strong> Break-even prices for each component in each grade's optimal blend.</li>
+                    </ul>
+                    
+                    <h3 class="h5 mb-3">Interpreting Shadow Prices</h3>
+                    <p>Shadow prices (Lagrange multipliers) indicate the sensitivity of the total blend cost to changes in the constraints:</p>
+                    <ul>
+                        <li>For a <strong>maximum constraint</strong> (e.g., max Sulfur), a positive shadow price means that increasing the limit by one unit would decrease the total blend cost by the shadow price amount.</li>
+                        <li>For a <strong>minimum constraint</strong> (e.g., min RON), a positive shadow price means that decreasing the limit by one unit would decrease the cost.</li>
+                    </ul>
+                    <p>Understanding these can guide decisions on whether it's economical to try to relax certain specifications.</p>
+                </section>
+                
+                <section id="troubleshooting" class="help-section">
+                    <h2 class="help-section-title">Troubleshooting</h2>
+                    
+                    <h3 class="h5 mb-3">Common Issues</h3>
+                    <div class="accordion" id="troubleshootingAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading1">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1" aria-expanded="false" aria-controls="collapse1">
+                                    Optimization Fails with "Infeasible Solution"
+                                </button>
+                            </h2>
+                            <div id="collapse1" class="accordion-collapse collapse" aria-labelledby="heading1" data-bs-parent="#troubleshootingAccordion">
+                                <div class="accordion-body">
+                                    <p>This occurs when there is no blend recipe that can satisfy all constraints simultaneously. Solutions include:</p>
+                                    <ul>
+                                        <li>Check that your grade specifications are achievable with the given components.</li>
+                                        <li>Relax some of the tighter constraints in your grade specifications.</li>
+                                        <li>Add more components with different properties to expand the solution space.</li>
+                                        <li>Try a different solver (especially COBYLA, which can sometimes find solutions where other solvers fail).</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading2">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2" aria-expanded="false" aria-controls="collapse2">
+                                    "File Format Not Supported" Error
+                                </button>
+                            </h2>
+                            <div id="collapse2" class="accordion-collapse collapse" aria-labelledby="heading2" data-bs-parent="#troubleshootingAccordion">
+                                <div class="accordion-body">
+                                    <p>Ensure your files have the correct extensions and formats:</p>
+                                    <ul>
+                                        <li>Components File: Excel (.xlsx, .xls) or CSV (.csv)</li>
+                                        <li>Grades File: Excel (.xlsx, .xls) or JSON (.json)</li>
+                                        <li>Additives File: Excel (.xlsx, .xls) or YAML (.yaml, .yml)</li>
+                                        <li>Candidates File: Excel (.xlsx, .xls) or CSV (.csv)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading3">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3" aria-expanded="false" aria-controls="collapse3">
+                                    Optimization Takes Too Long
+                                </button>
+                            </h2>
+                            <div id="collapse3" class="accordion-collapse collapse" aria-labelledby="heading3" data-bs-parent="#troubleshootingAccordion">
+                                <div class="accordion-body">
+                                    <p>Complex optimization problems with many components and constraints can take time. To improve performance:</p>
+                                    <ul>
+                                        <li>Try using the SLSQP solver, which is often faster than trust-constr but may be less robust.</li>
+                                        <li>Reduce the number of components if some are very similar.</li>
+                                        <li>Optimize one grade at a time instead of all grades at once.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading4">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4" aria-expanded="false" aria-controls="collapse4">
+                                    Property Calculation Errors
+                                </button>
+                            </h2>
+                            <div id="collapse4" class="accordion-collapse collapse" aria-labelledby="heading4" data-bs-parent="#troubleshootingAccordion">
+                                <div class="accordion-body">
+                                    <p>If you encounter errors related to property calculations:</p>
+                                    <ul>
+                                        <li>Check that all components have valid values for all required properties.</li>
+                                        <li>Ensure there are no missing or non-numeric values in your input files.</li>
+                                        <li>Verify that property names in your grades file match those in your components file.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Scroll spy for help navigation
+    document.addEventListener('DOMContentLoaded', function() {
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('#help-nav a');
+        
+        const observerOptions = {
+            rootMargin: '-100px 0px -80% 0px',
+            threshold: 0
+        };
+        
+        const observerCallback = (entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const activeId = entry.target.id;
+                    navLinks.forEach(link => {
+                        link.classList.remove('active', 'fw-bold', 'text-primary');
+                        if (link.getAttribute('href') === '#' + activeId) {
+                            link.classList.add('active', 'fw-bold', 'text-primary');
+                        }
+                    });
+                }
+            });
+        };
+        
+        const observer = new IntersectionObserver(observerCallback, observerOptions);
+        sections.forEach(section => {
+            observer.observe(section);
+        });
+        
+        // Smooth scrolling for navigation links
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                window.scrollTo({
+                    top: targetElement.offsetTop - 20,
+                    behavior: 'smooth'
+                });
+            });
+        });
+    });
+</script>
+{% endblock %} 

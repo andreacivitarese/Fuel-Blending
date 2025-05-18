@@ -1,0 +1,226 @@
+/* Global Styles */
+:root {
+    --primary-color: #0d6efd;
+    --primary-dark: #0a58ca;
+    --secondary-color: #6c757d;
+    --success-color: #198754;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #0dcaf0;
+    --light-color: #f8f9fa;
+    --dark-color: #212529;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #f5f8fa;
+}
+
+main {
+    flex: 1;
+}
+
+.footer {
+    margin-top: auto;
+}
+
+/* Card Styles */
+.card {
+    box-shadow: 0 .125rem .25rem rgba(0,0,0,.075);
+    border: none;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
+}
+
+.card-header {
+    background-color: var(--primary-color);
+    color: white;
+    border-top-left-radius: 0.5rem !important;
+    border-top-right-radius: 0.5rem !important;
+}
+
+/* Form Styles */
+.form-section {
+    background-color: var(--light-color);
+    padding: 20px;
+    border-radius: 0.5rem;
+    margin-bottom: 20px;
+}
+
+.form-section-title {
+    color: var(--primary-color);
+    margin-bottom: 15px;
+}
+
+.file-upload-info {
+    margin-top: 5px;
+    font-size: 0.85rem;
+    color: var(--secondary-color);
+}
+
+/* Button Styles */
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+}
+
+.btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* Table Styles */
+.table th {
+    background-color: var(--light-color);
+}
+
+.property-table th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background-color: var(--light-color);
+}
+
+/* Results Styles */
+.results-card {
+    height: 100%;
+    transition: all 0.3s;
+}
+
+.results-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15);
+}
+
+.badge-success {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.badge-danger {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.text-success {
+    color: var(--success-color) !important;
+}
+
+.text-danger {
+    color: var(--danger-color) !important;
+}
+
+.text-neutral {
+    color: var(--secondary-color) !important;
+}
+
+.download-section {
+    background-color: var(--light-color);
+    padding: 15px;
+    border-radius: 0.5rem;
+    margin-top: 20px;
+}
+
+/* Chart Styles */
+.component-chart {
+    min-height: 300px;
+    margin-bottom: 20px;
+}
+
+.comparison-chart {
+    min-height: 300px;
+    margin-bottom: 20px;
+}
+
+/* Help Page Styles */
+.help-toc {
+    position: sticky;
+    top: 20px;
+}
+
+.help-section {
+    margin-bottom: 30px;
+}
+
+.help-section-title {
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+/* Navigation Styles */
+.navbar-dark {
+    background-color: var(--primary-color) !important;
+}
+
+.nav-tabs .nav-link {
+    color: var(--secondary-color);
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.results-tabs .nav-link {
+    color: var(--secondary-color);
+}
+
+.results-tabs .nav-link.active {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 767.98px) {
+    .help-toc {
+        position: relative;
+        margin-bottom: 20px;
+    }
+    
+    .form-section {
+        padding: 15px;
+    }
+    
+    .card-body {
+        padding: 15px;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #dee2e6 !important;
+    }
+    
+    .card-header {
+        background-color: #f8f9fa !important;
+        color: #212529 !important;
+    }
+    
+    a[href]:after {
+        content: " (" attr(href) ")";
+    }
+} 

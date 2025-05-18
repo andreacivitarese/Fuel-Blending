@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}Evaluate Candidate Blends - Fuel Blending{% endblock %}
+
+{% block extra_css %}
+<style>
+    .file-upload {
+        position: relative;
+    }
+    .file-upload-info {
+        margin-top: 5px;
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    .form-section {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    .form-section-title {
+        margin-bottom: 15px;
+        color: #0d6efd;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-flask me-2"></i>Evaluate Candidate Blends</h1>
+            <a href="{{ url_for('help_page') }}" class="btn btn-outline-info">
+                <i class="fas fa-question-circle me-1"></i> Help
+            </a>
+        </div>
+        
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i> This tool evaluates user-defined candidate blends against optimal results and calculates neutral prices.
+        </div>
+        
+        <div class="card shadow">
+            <div class="card-body">
+                <form action="{{ url_for('eval_candidate') }}" method="post" enctype="multipart/form-data">
+                    
+                    <div class="form-section">
+                        <h4 class="form-section-title"><i class="fas fa-file-upload me-2"></i>Input Files</h4>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="candidates_file" class="form-label">Candidates File <span class="text-danger">*</span></label>
+                                <div class="file-upload">
+                                    <input type="file" class="form-control" id="candidates_file" name="candidates_file" required>
+                                    <div class="file-upload-info">
+                                        <i class="fas fa-info-circle"></i> Excel/CSV file with candidate blends to evaluate.
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="grades_file" class="form-label">Grades File <span class="text-danger">*</span></label>
+                                <div class="file-upload">
+                                    <input type="file" class="form-control" id="grades_file" name="grades_file" required>
+                                    <div class="file-upload-info">
+                                        <i class="fas fa-info-circle"></i> Excel/JSON file with grade specifications.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="results_file" class="form-label">Results File <span class="text-danger">*</span></label>
+                                <div class="file-upload">
+                                    <input type="file" class="form-control" id="results_file" name="results_file" required>
+                                    <div class="file-upload-info">
+                                        <i class="fas fa-info-circle"></i> JSON file with results from a previous optimization run.
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="components_np_file" class="form-label">Components File for Neutral Prices <span class="text-danger">*</span></label>
+                                <div class="file-upload">
+                                    <input type="file" class="form-control" id="components_np_file" name="components_np_file" required>
+                                    <div class="file-upload-info">
+                                        <i class="fas fa-info-circle"></i> Excel/CSV file with components for neutral price calculation.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="additives_file" class="form-label">Additives File <span class="text-muted">(Optional)</span></label>
+                                <div class="file-upload">
+                                    <input type="file" class="form-control" id="additives_file" name="additives_file">
+                                    <div class="file-upload-info">
+                                        <i class="fas fa-info-circle"></i> Excel/YAML file with additive data.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h4 class="form-section-title"><i class="fas fa-sliders-h me-2"></i>Evaluation Parameters</h4>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="flat_price" class="form-label">Flat Price (USD/mt)</label>
+                                <input type="number" class="form-control" id="flat_price" name="flat_price" value="700.0" step="0.1" min="0">
+                                <div class="form-text">Base flat price used for cost calculations if not found in the results file.</div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="format" class="form-label">Output Format</label>
+                                <select class="form-select" id="format" name="format">
+                                    <option value="json" selected>JSON</option>
+                                    <option value="csv">CSV</option>
+                                </select>
+                                <div class="form-text">Format for output files.</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="reset" class="btn btn-outline-secondary">
+                            <i class="fas fa-undo me-1"></i> Reset
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-play me-1"></i> Run Evaluation
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="mt-4">
+            <div class="alert alert-secondary">
+                <h5><i class="fas fa-lightbulb me-2"></i>Tips for Candidate Evaluation</h5>
+                <ul class="mb-0">
+                    <li>The candidates file should contain columns for <code>candidate_id</code>, <code>grade_name</code>, and one column for each component with the component name as the column header.</li>
+                    <li>Component fractions in your candidates file should add up to 1.0 for each candidate blend.</li>
+                    <li>The results file should be in JSON format from a previous optimization run with shadow prices included.</li>
+                    <li>The components file for neutral prices should list all components you want to calculate neutral prices for.</li>
+                    <li>For detailed documentation on the file formats, refer to the Help section.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Add file name display for file inputs
+        $('input[type="file"]').on('change', function() {
+            let fileName = $(this).val().split('\\').pop();
+            if (fileName) {
+                $(this).next('.file-upload-info').html('<i class="fas fa-check-circle text-success"></i> Selected: <strong>' + fileName + '</strong>');
+            } else {
+                // Reset to default message based on input ID
+                let defaultMsg = '';
+                switch($(this).attr('id')) {
+                    case 'candidates_file':
+                        defaultMsg = 'Excel/CSV file with candidate blends to evaluate.';
+                        break;
+                    case 'grades_file':
+                        defaultMsg = 'Excel/JSON file with grade specifications.';
+                        break;
+                    case 'results_file':
+                        defaultMsg = 'JSON file with results from a previous optimization run.';
+                        break;
+                    case 'components_np_file':
+                        defaultMsg = 'Excel/CSV file with components for neutral price calculation.';
+                        break;
+                    case 'additives_file':
+                        defaultMsg = 'Excel/YAML file with additive data.';
+                        break;
+                    default:
+                        defaultMsg = 'Select a file';
+                }
+                $(this).next('.file-upload-info').html('<i class="fas fa-info-circle"></i> ' + defaultMsg);
+            }
+        });
+    });
+</script>
+{% endblock %} 
