@@ -7,7 +7,6 @@ import uuid
 from pathlib import Path
 import logging
 import subprocess
-import time
 from werkzeug.utils import secure_filename
 import argparse
 import sys
